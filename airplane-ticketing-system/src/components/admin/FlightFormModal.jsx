@@ -6,6 +6,9 @@ import Button from '../common/Button';
 import { useAirlinesList, useAirportsList } from '../../hooks/useAirlinesAirports';
 import { useCreateFlight, useUpdateFlight } from '../../hooks/useFlights';
 
+import { useAircraftsList } from '../../hooks/useAircrafts';
+import { useRoutesList } from '../../hooks/useRoutes';
+
 const EMPTY_FORM = {
   flightNumber: '',
   airlineId: '',
@@ -24,6 +27,8 @@ const EMPTY_FORM = {
 export default function FlightFormModal({ isOpen, onClose, flight }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const { data: airlines } = useAirlinesList();
+  const { data: aircrafts } = useAircraftsList();
+  const { data: routes } = useRoutesList();
   const createFlight = useCreateFlight();
   const updateFlight = useUpdateFlight();
   const isEdit = !!flight;
@@ -82,6 +87,16 @@ export default function FlightFormModal({ isOpen, onClose, flight }) {
     label: `${a.name} (${a.iataCode})`,
   }));
 
+  const aircraftOptions = (aircrafts || []).map((a) => ({
+  value: a.id,
+  label: `${a.model} — ${a.registrationNumber}`,
+}));
+
+const routeOptions = (routes || []).map((r) => ({
+  value: r.id,
+  label: `${r.originIata} (${r.originCity}) → ${r.destinationIata} (${r.destinationCity})`,
+}));
+
   const isPending = createFlight.isPending || updateFlight.isPending;
 
   return (
@@ -113,22 +128,24 @@ export default function FlightFormModal({ isOpen, onClose, flight }) {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Input
-            label="Aircraft ID"
-            name="aircraftId"
-            placeholder="Aircraft UUID"
-            value={form.aircraftId}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            label="Route ID"
-            name="routeId"
-            placeholder="Route UUID"
-            value={form.routeId}
-            onChange={handleChange}
-            required
-          />
+         <Select
+  label="Aircraft"
+  name="aircraftId"
+  options={aircraftOptions}
+  placeholder="Select aircraft"
+  value={form.aircraftId}
+  onChange={handleChange}
+  required
+/>
+<Select
+  label="Route"
+  name="routeId"
+  options={routeOptions}
+  placeholder="Select route"
+  value={form.routeId}
+  onChange={handleChange}
+  required
+/>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
