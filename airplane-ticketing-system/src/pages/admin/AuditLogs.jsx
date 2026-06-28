@@ -76,7 +76,7 @@ export default function AuditLogs() {
         <p className="text-slate-500 text-sm mt-1">Track every system action for compliance and security</p>
       </div>
 
-      <div className="card !p-0">
+      <div className="card !p-4">
         <div className="p-4 border-b border-slate-100 flex flex-wrap gap-3">
           <Input
             icon={Search}

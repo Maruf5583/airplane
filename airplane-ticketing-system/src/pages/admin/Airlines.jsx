@@ -59,7 +59,7 @@ export default function Airlines() {
         </Button>
       </div>
 
-      <div className="card !p-0">
+      <div className="card !p-4">
         {!isLoading && (!airlines || airlines.length === 0) ? (
           <EmptyState
             icon={Building2}

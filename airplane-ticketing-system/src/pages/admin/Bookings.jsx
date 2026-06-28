@@ -65,7 +65,7 @@ export default function Bookings() {
         <p className="text-slate-500 text-sm mt-1">All customer bookings across the platform</p>
       </div>
 
-      <div className="card !p-0">
+      <div className="card !p-4">
         <div className="p-4 border-b border-slate-100">
           <Input
             icon={Search}

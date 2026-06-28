@@ -82,7 +82,7 @@ export default function Airports() {
         </Button>
       </div>
 
-      <div className="card !p-0">
+      <div className="card !p-4">
         <div className="p-4 border-b border-slate-100">
           <Input
             icon={Search}
