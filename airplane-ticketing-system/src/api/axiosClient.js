@@ -13,6 +13,13 @@ axiosClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Let the browser set the correct multipart boundary when sending FormData
+  // (e.g. file uploads) instead of forcing application/json on every request
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
+
   return config;
 });
 

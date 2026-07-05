@@ -83,3 +83,33 @@ export function useDeleteAirport() {
     onError: (error) => toast.error(error.response?.data?.detail || 'Failed to delete airport'),
   });
 }
+
+// NEW - Upload photos (max 5)
+export function useUploadAirportPhotos() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ airportId, files }) => {
+      const formData = new FormData();
+      files.forEach((file) => formData.append('photos', file));
+      return airportsApi.uploadPhotos(airportId, formData);
+    },
+    onSuccess: () => {
+      toast.success('Photos uploaded');
+      queryClient.invalidateQueries({ queryKey: ['airports'] });
+    },
+    onError: (error) => toast.error(error.response?.data?.detail || 'Failed to upload photos'),
+  });
+}
+
+// NEW - Delete a single photo
+export function useDeleteAirportPhoto() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ airportId, photoId }) => airportsApi.deletePhoto(airportId, photoId),
+    onSuccess: () => {
+      toast.success('Photo deleted');
+      queryClient.invalidateQueries({ queryKey: ['airports'] });
+    },
+    onError: (error) => toast.error(error.response?.data?.detail || 'Failed to delete photo'),
+  });
+}

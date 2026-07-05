@@ -1,10 +1,13 @@
 import Modal from '../common/Modal';
 import Spinner from '../common/Spinner';
-import { useFlightSeatMap } from '../../hooks/useFlights';
+import Button from '../common/Button';
+import { useFlightSeatMap, useGenerateSeats } from '../../hooks/useFlights';
+import { RefreshCw } from 'lucide-react';
 import clsx from 'clsx';
 
 export default function SeatMapModal({ isOpen, onClose, flightId, flightNumber }) {
   const { data, isLoading } = useFlightSeatMap(flightId, isOpen);
+  const generateSeats = useGenerateSeats();
 
   const seatStyle = (seat) => {
     if (!seat.isAvailable) return 'bg-slate-200 text-slate-400 cursor-not-allowed';
@@ -13,11 +16,26 @@ export default function SeatMapModal({ isOpen, onClose, flightId, flightNumber }
     return 'bg-emerald-50 text-emerald-700 border-emerald-200';
   };
 
+  const seats = data?.seats || [];
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Seat Map — ${flightNumber || ''}`} size="lg">
       {isLoading ? (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
+        </div>
+      ) : seats.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 gap-4">
+          <p className="text-slate-500 text-sm">
+            This flight doesn't have seats generated yet.
+          </p>
+          <Button
+            icon={RefreshCw}
+            onClick={() => generateSeats.mutate(flightId)}
+            disabled={generateSeats.isPending}
+          >
+            {generateSeats.isPending ? 'Generating...' : 'Generate Seats'}
+          </Button>
         </div>
       ) : (
         <>
@@ -36,7 +54,7 @@ export default function SeatMapModal({ isOpen, onClose, flightId, flightNumber }
             </span>
           </div>
           <div className="grid grid-cols-6 gap-2 max-h-96 overflow-y-auto p-1">
-            {(data?.seats || []).map((seat) => (
+            {seats.map((seat) => (
               <div
                 key={seat.id}
                 title={`${seat.seatNumber} • ${seat.seatClass}${

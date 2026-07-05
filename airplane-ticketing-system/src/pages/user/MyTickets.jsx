@@ -68,7 +68,9 @@ function BookingTicketsGroup({ bookingId, reference }) {
 export default function MyTickets() {
   const { data, isLoading } = useBookingsList({ PageSize: 50 });
 
-  const confirmedBookings = (data?.items || []).filter((b) => b.status === 'Confirmed');
+  const confirmedBookings = (data?.items || []).filter(
+  (b) => b.status === 'Confirmed' || b.status === 2
+);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">

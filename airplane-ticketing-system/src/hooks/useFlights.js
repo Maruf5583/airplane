@@ -77,6 +77,20 @@ export function useDeleteFlight() {
   });
 }
 
+export function useGenerateSeats() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => flightsApi.generateSeats(id),
+    onSuccess: (_, id) => {
+      toast.success('Seats generated successfully');
+      queryClient.invalidateQueries({ queryKey: ['flights', id, 'seats'] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || 'Failed to generate seats');
+    },
+  });
+}
+
 export function useUpdateFlightStatus() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -3,6 +3,8 @@ import axiosClient from './axiosClient';
 export const flightsApi = {
   getAll: (params) => axiosClient.get('/api/v1/flights', { params }),
 
+  generateSeats: (id) => axiosClient.post(`/api/v1/flights/${id}/generate-seats`),
+
   getById: (id) => axiosClient.get(`/api/v1/flights/${id}`),
 
   create: (data) => axiosClient.post('/api/v1/flights', data),

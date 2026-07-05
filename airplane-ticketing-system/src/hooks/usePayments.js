@@ -24,6 +24,21 @@ export function usePayment(id) {
   });
 }
 
+// NEW - admin approves/rejects a manually submitted payment
+export function useVerifyPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }) => paymentsApi.verifyPayment(id, payload),
+    onSuccess: (_, variables) => {
+      toast.success(variables.payload.approve ? 'Payment approved' : 'Payment rejected');
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || 'Failed to process payment');
+    },
+  });
+}
+
 export function useRequestRefund() {
   const queryClient = useQueryClient();
   return useMutation({

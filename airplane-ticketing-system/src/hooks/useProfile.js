@@ -30,6 +30,23 @@ export function useUpdateProfile() {
   });
 }
 
+export function useUploadProfilePicture() {
+  const queryClient = useQueryClient();
+  const { updateUserInStorage } = useAuthContext();
+
+  return useMutation({
+    mutationFn: (file) => usersApi.uploadProfilePicture(file),
+    onSuccess: (response) => {
+      toast.success('Profile picture updated');
+      updateUserInStorage(response.data);
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || 'Failed to upload picture');
+    },
+  });
+}
+
 export function useUpdatePassport() {
   return useMutation({
     mutationFn: (payload) => usersApi.updatePassport(payload),
