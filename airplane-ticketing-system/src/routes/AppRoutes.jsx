@@ -47,6 +47,20 @@ import Payment from '../pages/user/booking/Payment';
 import BookingConfirmation from '../pages/user/booking/BookingConfirmation';
 import BookingTickets from '../pages/user/booking/BookingTickets';
 
+
+
+import About from "../pages/user/About";
+import Contact from "../pages/user/Contact";
+
+
+
+import Offers from '../pages/user/Offers';
+import HelpCenter from '../pages/user/HelpCenter';
+import ManageBooking from '../pages/user/ManageBooking';
+import FAQ from '../pages/user/FAQ';
+import TermsOfService from '../pages/user/TermsOfService';
+import PrivacyPolicy from '../pages/user/PrivacyPolicy';
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -86,6 +100,15 @@ export default function AppRoutes() {
       <Route path="/" element={<UserLayout />}>
         <Route index element={<Home />} />
         <Route path="search-results" element={<SearchResults />} />
+        <Route path="about" element={<About />} />
+        <Route path="contact" element={<Contact />} />
+      
+        <Route path="offers" element={<Offers />} />
+     <Route path="support/help-center" element={<HelpCenter />} />
+<Route path="support/manage-booking" element={<ManageBooking />} />
+<Route path="support/faq" element={<FAQ />} />
+<Route path="legal/terms-of-service" element={<TermsOfService />} />
+<Route path="legal/privacy-policy" element={<PrivacyPolicy />} />
 
         {/* These require a logged-in passenger */}
         <Route element={<ProtectedRoute allowedRoles={['Passenger', 'Agent', 'Admin']} />}>

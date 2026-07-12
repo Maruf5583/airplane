@@ -92,7 +92,10 @@ export default function FlightSearchForm({ onSearch, isSearching }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-soft border border-slate-100 p-5 sm:p-6">
+    // No shadow/border/bg here — Home.jsx already wraps this in its own
+    // "bg-white rounded-2xl shadow-xl border border-slate-100" card.
+    // Keeping both stacked was creating a visible double-card/double-shadow look.
+    <div className="p-3 sm:p-4">
       {/* Tabs */}
       <div className="flex gap-1 mb-5 bg-slate-100 p-1 rounded-xl w-fit">
         {TABS.map((t) => (
@@ -101,8 +104,8 @@ export default function FlightSearchForm({ onSearch, isSearching }) {
             type="button"
             onClick={() => setTab(t.key)}
             className={clsx(
-              'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-              tab === t.key ? 'bg-white text-primary-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              'px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
+              tab === t.key ? 'bg-white text-emerald shadow-sm' : 'text-slate-500 hover:text-emerald'
             )}
           >
             {t.label}
@@ -129,7 +132,7 @@ export default function FlightSearchForm({ onSearch, isSearching }) {
               <button
                 type="button"
                 onClick={swapOriginDestination}
-                className="hidden sm:flex absolute left-1/2 top-9 -translate-x-1/2 w-8 h-8 rounded-full bg-white border border-slate-200 items-center justify-center text-slate-400 hover:text-primary-600 hover:border-primary-300 z-10"
+                className="hidden sm:flex absolute left-1/2 top-9 -translate-x-1/2 w-8 h-8 rounded-full bg-white border border-slate-200 items-center justify-center text-slate-400 hover:text-emerald hover:border-emerald/30 transition-colors duration-200 z-10"
               >
                 <ArrowLeftRight size={14} />
               </button>
@@ -192,7 +195,7 @@ export default function FlightSearchForm({ onSearch, isSearching }) {
                   <button
                     type="button"
                     onClick={() => removeLeg(idx)}
-                    className="p-2.5 rounded-lg text-red-500 hover:bg-red-50 h-fit"
+                    className="p-2.5 rounded-lg text-crimson hover:bg-crimson/5 transition-colors duration-200 h-fit"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -202,7 +205,7 @@ export default function FlightSearchForm({ onSearch, isSearching }) {
             <button
               type="button"
               onClick={addLeg}
-              className="flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700"
+              className="flex items-center gap-1.5 text-sm font-medium text-emerald hover:text-emerald-dark transition-colors duration-200"
             >
               <Plus size={15} /> Add another flight
             </button>
@@ -219,7 +222,13 @@ export default function FlightSearchForm({ onSearch, isSearching }) {
           />
         </div>
 
-        <Button type="submit" icon={Search} size="lg" className="w-full" isLoading={isSearching}>
+        <Button
+          type="submit"
+          icon={Search}
+          size="lg"
+          className="w-full !bg-emerald hover:!bg-emerald-dark"
+          isLoading={isSearching}
+        >
           Search Flights
         </Button>
       </form>

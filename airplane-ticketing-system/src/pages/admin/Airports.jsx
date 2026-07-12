@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, MapPin, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, Search, ImageOff } from 'lucide-react';
 import { useAirportsList, useDeleteAirport } from '../../hooks/useAirlinesAirports';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -27,6 +27,29 @@ export default function Airports() {
   };
 
   const columns = [
+    {
+     
+  key: 'photo',
+  header: 'Photo',
+  render: (row) => {
+    const primaryPhoto = row.photos?.find((p) => p.isPrimary) || row.photos?.[0];
+    const photoUrl = primaryPhoto
+      ? `${import.meta.env.VITE_API_BASE_URL}${primaryPhoto.url}`
+      : null;
+
+    return photoUrl ? (
+      <img
+        src={photoUrl}
+        alt={row.name}
+        className="w-12 h-12 rounded-lg object-cover border border-slate-200"
+      />
+    ) : (
+      <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300">
+        <ImageOff size={18} />
+      </div>
+    );
+  },
+},
     {
       key: 'iataCode',
       header: 'Code',

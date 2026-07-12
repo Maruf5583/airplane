@@ -15,6 +15,10 @@ export const adminApi = {
 
   createAgent: (data) => axiosClient.post('/api/v1/admin/agents', data),
 
+  // Notun: existing user er role update (Passenger -> Agent/Admin)
+  updateUserRole: (userId, role) =>
+    axiosClient.patch(`/api/v1/admin/users/${userId}/role`, { role }),
+
   sendFlightAlert: (data) =>
     axiosClient.post('/api/v1/admin/notifications/flight-alert', data),
 };

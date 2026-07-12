@@ -55,3 +55,17 @@ export function useCreateAgent() {
     },
   });
 }
+
+export function useUpdateUserRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, role }) => adminApi.updateUserRole(userId, role),
+    onSuccess: (_, variables) => {
+      toast.success(`Role updated to ${variables.role}`);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || 'Failed to update user role');
+    },
+  });
+}

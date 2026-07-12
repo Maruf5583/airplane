@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, UserPlus, Trash2, Power, ShieldCheck, ShieldOff } from 'lucide-react';
-import { useUsersList, useDeleteUser, useSetUserActive } from '../../hooks/useUsers';
+import { useUsersList, useDeleteUser, useSetUserActive, useUpdateUserRole } from '../../hooks/useUsers';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import Button from '../../components/common/Button';
@@ -16,6 +16,12 @@ const ROLE_FILTER_OPTIONS = [
   { value: 'Admin', label: 'Admins' },
 ];
 
+const ROLE_OPTIONS = [
+  { value: 'Passenger', label: 'Passenger' },
+  { value: 'Agent', label: 'Agent' },
+  { value: 'Admin', label: 'Admin' },
+];
+
 export default function Users() {
   const [pageNumber, setPageNumber] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,10 +35,20 @@ export default function Users() {
 
   const deleteUser = useDeleteUser();
   const setActive = useSetUserActive();
+  const updateRole = useUpdateUserRole();
 
   const handleDelete = (user) => {
     if (window.confirm(`Delete user ${user.fullName}? This cannot be undone.`)) {
       deleteUser.mutate(user.id);
+    }
+  };
+
+  const handleRoleChange = (user, newRole) => {
+    if (newRole === user.role) return;
+    if (
+      window.confirm(`Change ${user.fullName}'s role from ${user.role} to ${newRole}?`)
+    ) {
+      updateRole.mutate({ userId: user.id, role: newRole });
     }
   };
 
@@ -55,7 +71,18 @@ export default function Users() {
     {
       key: 'role',
       header: 'Role',
-      render: (row) => <Badge status={row.role} />,
+      render: (row) =>
+        row.email === 'admin@airsystem.com' ? (
+          <Badge status={row.role} />
+        ) : (
+          <Select
+            value={row.role}
+            options={ROLE_OPTIONS}
+            onChange={(e) => handleRoleChange(row, e.target.value)}
+            disabled={updateRole.isPending}
+            className="!py-1 !text-xs min-w-[110px]"
+          />
+        ),
     },
     {
       key: 'isEmailVerified',
