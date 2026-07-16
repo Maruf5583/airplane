@@ -14,8 +14,11 @@ import {
   X,
   Bell,
   ChevronDown,
+  Settings,
 } from 'lucide-react';
 import { useAuth, useLogout } from '../hooks/useAuth';
+import { useSettings } from '../hooks/useSettings';
+import { getFileUrl } from '../utils/getFileUrl';
 
 const NAV_ITEMS = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,6 +29,7 @@ const NAV_ITEMS = [
   { to: '/admin/payments', label: 'Payments & Refunds', icon: CreditCard },
   { to: '/admin/users', label: 'Users & Agents', icon: Users },
   { to: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText },
+   { to: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function AdminLayout() {
@@ -34,6 +38,7 @@ export default function AdminLayout() {
   const { user } = useAuth();
   const logout = useLogout();
   const navigate = useNavigate();
+   const { data: settings } = useSettings();
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -51,20 +56,30 @@ export default function AdminLayout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex items-center justify-between px-6 h-16 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
-              <Plane size={16} className="text-white" />
-            </div>
-            <span className="font-bold text-slate-800 text-lg">SkyBook</span>
-          </div>
-          <button
-            className="lg:hidden text-slate-400"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X size={20} />
-          </button>
-        </div>
+       <div className="flex items-center justify-between px-6 h-16 border-b border-slate-100">
+  <div className="flex items-center gap-2">
+    {settings?.logoUrl ? (
+      <img
+        src={getFileUrl(settings.logoUrl)}
+        alt="logo"
+        className="w-8 h-8 rounded-lg object-cover"
+      />
+    ) : (
+      <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
+        <Plane size={16} className="text-white" />
+      </div>
+    )}
+    <span className="font-bold text-slate-800 text-lg">
+      {settings?.siteName || 'SkyBook'}
+    </span>
+  </div>
+  <button
+    className="lg:hidden text-slate-400"
+    onClick={() => setSidebarOpen(false)}
+  >
+    <X size={20} />
+  </button>
+</div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (

@@ -11,7 +11,9 @@ import {
   BookMarked,
 } from 'lucide-react';
 import { useAuth, useLogout } from '../hooks/useAuth';
+import { useSettings } from '../hooks/useSettings';
 import Footer from './Footer';
+import { getFileUrl } from '../utils/getFileUrl';
 
 // Simple, non-dropdown links
 const PUBLIC_LINKS = [
@@ -57,6 +59,7 @@ export default function UserLayout() {
   const logout = useLogout();
   const navigate = useNavigate();
   const dropdownRefs = useRef({});
+  const { data: settings } = useSettings();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -104,10 +107,20 @@ export default function UserLayout() {
           }`}
         >
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-emerald flex items-center justify-center transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110">
-              <Plane size={16} className="text-white" />
-            </div>
-            <span className="font-display font-bold text-slate-800 text-lg">SkyBook</span>
+            {settings?.logoUrl ? (
+              <img
+                src={getFileUrl(settings.logoUrl)}
+                alt="logo"
+                className="w-8 h-8 rounded-lg object-cover transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-lg bg-emerald flex items-center justify-center transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110">
+                <Plane size={16} className="text-white" />
+              </div>
+            )}
+            <span className="font-display font-bold text-slate-800 text-lg">
+              {settings?.siteName || 'SkyBook'}
+            </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
@@ -286,7 +299,22 @@ export default function UserLayout() {
           />
           <div className="fixed right-0 top-0 h-full w-72 bg-white shadow-xl p-5 flex flex-col gap-1 animate-slide-in-right overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <span className="font-display font-bold text-slate-800">Menu</span>
+              <div className="flex items-center gap-2">
+                {settings?.logoUrl ? (
+                  <img
+                    src={settings.logoUrl}
+                    alt="logo"
+                    className="w-7 h-7 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-lg bg-emerald flex items-center justify-center">
+                    <Plane size={14} className="text-white" />
+                  </div>
+                )}
+                <span className="font-display font-bold text-slate-800">
+                  {settings?.siteName || 'SkyBook'}
+                </span>
+              </div>
               <button
                 onClick={() => setMobileOpen(false)}
                 className="text-slate-400 hover:text-emerald hover:rotate-90 transition-all duration-200"

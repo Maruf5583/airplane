@@ -25,6 +25,7 @@ import AdminBookings from '../pages/admin/Bookings';
 import AdminPayments from '../pages/admin/Payments';
 import AdminUsers from '../pages/admin/Users';
 import AdminAuditLogs from '../pages/admin/AuditLogs';
+import SettingsPage from '../pages/admin/SettingsPage';
 
 // Agent pages
 import AgentDashboard from '../pages/agent/Dashboard';
@@ -61,6 +62,8 @@ import FAQ from '../pages/user/FAQ';
 import TermsOfService from '../pages/user/TermsOfService';
 import PrivacyPolicy from '../pages/user/PrivacyPolicy';
 
+
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -82,6 +85,7 @@ export default function AppRoutes() {
           <Route path="payments" element={<AdminPayments />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="audit-logs" element={<AdminAuditLogs />} />
+          <Route path="settings" element={<SettingsPage />} /> 
         </Route>
       </Route>
 
