@@ -25,3 +25,12 @@ export const uploadFavicon = (file) => {
   formData.append('file', file);
   return axiosClient.post(`${BASE}/favicon`, formData).then((res) => res.data);
 };
+
+export const updateStripeSettings = (data) =>
+  axiosClient.put(`${BASE}/stripe`, data).then((res) => res.data);
+
+export const createPaymentIntent = (bookingId) =>
+  axiosClient.post(`/api/v1/payments/${bookingId}/create-intent`).then((res) => res.data);
+
+export const confirmStripePayment = (paymentIntentId) =>
+  axiosClient.post(`/api/v1/payments/stripe/confirm`, { paymentIntentId }).then((res) => res.data);

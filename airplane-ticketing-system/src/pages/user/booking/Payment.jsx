@@ -1,12 +1,17 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Landmark, Lock, ArrowLeft, ShieldCheck, Upload, X, ImageIcon } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import { Landmark, Lock, ArrowLeft, ShieldCheck, Upload, X, ImageIcon, CreditCard } from 'lucide-react';
 import Button from '../../../components/common/Button';
 import Input from '../../../components/common/Input';
-import { useSubmitPayment } from '../../../hooks/usePaymentFlow';
+import StripeCardForm from '../../../components/payment/StripeCardForm';   // ADD THIS
+import { useSubmitPayment, useCreatePaymentIntent, useConfirmStripePayment } from '../../../hooks/usePaymentFlow';   // ADD 2 hooks
+import { useSettings } from '../../../hooks/useSettings';   // ADD THIS
 import { useBookingFlow } from '../../../context/BookingFlowContext';
 
 const PAYMENT_METHODS = [
+  { value: 'Card', label: 'Card' },   // ADD — সবচেয়ে উপরে card option
   { value: 'BKash', label: 'bKash' },
   { value: 'Nagad', label: 'Nagad' },
   { value: 'Rocket', label: 'Rocket' },
@@ -23,13 +28,36 @@ export default function Payment() {
   const { resetFlow } = useBookingFlow();
   const booking = location.state?.booking;
 
-  const [method, setMethod] = useState('BKash');
+  const [method, setMethod] = useState(null);   
   const [transactionId, setTransactionId] = useState('');
   const [screenshot, setScreenshot] = useState(null);
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef(null);
 
   const submitPayment = useSubmitPayment();
+  const { data: settings } = useSettings();   // ADD THIS — publishable key এখান থেকে আসবে
+
+  // ADD BELOW — Card payment state
+  const [clientSecret, setClientSecret] = useState(null);
+  const [stripePromise, setStripePromise] = useState(null);
+  const createIntent = useCreatePaymentIntent();
+  const confirmStripe = useConfirmStripePayment();
+
+  // ADD BELOW — publishable key পেলে Stripe.js load করা
+  useEffect(() => {
+    if (settings?.stripePublishableKey) {
+      setStripePromise(loadStripe(settings.stripePublishableKey));
+    }
+  }, [settings?.stripePublishableKey]);
+
+  // ADD BELOW — Card method সিলেক্ট করলে backend থেকে PaymentIntent তৈরি করা
+  useEffect(() => {
+    if (method === 'Card' && booking?.id && !clientSecret) {
+      createIntent.mutate(booking.id, {
+        onSuccess: (data) => setClientSecret(data.clientSecret),
+      });
+    }
+  }, [method, booking?.id]);
 
   if (!booking) {
     navigate('/');
@@ -62,28 +90,40 @@ export default function Payment() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-const handleSubmit = (e) => {
-  e.preventDefault();
-  if (!transactionId || !screenshot) return;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!transactionId || !screenshot) return;
 
-  const formData = new FormData();
-  formData.append('BookingId', booking.id);   // NEW
-  formData.append('TransactionId', transactionId);
-  formData.append('Method', method);
-  formData.append('Screenshot', screenshot);
+    const formData = new FormData();
+    formData.append('BookingId', booking.id);
+    formData.append('TransactionId', transactionId);
+    formData.append('Method', method);
+    formData.append('Screenshot', screenshot);
 
-  submitPayment.mutate(
-    { bookingId: booking.id, formData },
-    {
+    submitPayment.mutate(
+      { bookingId: booking.id, formData },
+      {
+        onSuccess: (response) => {
+          resetFlow();
+          navigate('/booking/confirmation', {
+            state: { payment: response.data, bookingId: booking.id, pendingVerification: true },
+          });
+        },
+      }
+    );
+  };
+
+  // ADD BELOW — Card payment success হলে backend confirm + confirmation page
+  const handleCardPaymentSuccess = (paymentIntentId) => {
+    confirmStripe.mutate(paymentIntentId, {
       onSuccess: (response) => {
         resetFlow();
         navigate('/booking/confirmation', {
-          state: { payment: response.data, bookingId: booking.id, pendingVerification: true },
+          state: { payment: response, bookingId: booking.id, pendingVerification: false },
         });
       },
-    }
-  );
-};
+    });
+  };
 
   return (
     <div className="max-w-lg mx-auto px-4 py-10">
@@ -93,7 +133,9 @@ const handleSubmit = (e) => {
         </div>
         <h1 className="text-xl font-bold text-slate-800">Complete Your Payment</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Pay using your preferred method, then submit the transaction details below
+          {method === 'Card'
+            ? 'Enter your card details to pay instantly'
+            : 'Pay using your preferred method, then submit the transaction details below'}
         </p>
       </div>
 
@@ -110,97 +152,113 @@ const handleSubmit = (e) => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="card space-y-4">
-        {/* Payment method selector */}
-        <div>
-          <label className="label-text mb-2 block">Payment Method</label>
-          <div className="grid grid-cols-3 gap-2">
-            {PAYMENT_METHODS.map((m) => (
-              <button
-                key={m.value}
-                type="button"
-                onClick={() => setMethod(m.value)}
-                className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border text-xs font-medium transition-colors ${
-                  method === m.value
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-slate-200 text-slate-500 hover:border-slate-300'
-                }`}
-              >
-                <Landmark size={16} />
-                {m.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Instructions */}
-        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs text-slate-500 leading-relaxed">
-          Send <strong className="text-slate-700">{booking.currencyCode} {booking.totalAmount.toFixed(2)}</strong> to
-          our {PAYMENT_METHODS.find((m) => m.value === method)?.label} account, then enter the transaction ID and
-          upload a screenshot of the payment confirmation below.
-        </div>
-
-        <Input
-          label="Transaction ID"
-          placeholder="e.g. 8N7A2K9X1M"
-          value={transactionId}
-          onChange={(e) => setTransactionId(e.target.value)}
-          required
-        />
-
-        {/* Screenshot upload */}
-        <div>
-          <label className="label-text mb-2 block">Payment Screenshot</label>
-
-          {!preview ? (
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleFileSelect}
-              className="hidden"
-              id="payment-screenshot-input"
-            />
-          ) : null}
-
-          {preview ? (
-            <div className="relative rounded-xl overflow-hidden border border-slate-200">
-              <img src={preview} alt="Payment proof" className="w-full max-h-64 object-contain bg-slate-50" />
-              <button
-                type="button"
-                onClick={removeScreenshot}
-                className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          ) : (
-            <label
-              htmlFor="payment-screenshot-input"
-              className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-xl py-8 cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-colors"
+      {/* Payment method selector — এখন card component-এর বাইরে, দুই flow-এই কমন */}
+      <div className="card mb-5">
+        <label className="label-text mb-2 block">Payment Method</label>
+        <div className="grid grid-cols-3 gap-2">
+          {PAYMENT_METHODS.map((m) => (
+            <button
+              key={m.value}
+              type="button"
+              onClick={() => setMethod(m.value)}
+              className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border text-xs font-medium transition-colors ${
+                method === m.value
+                  ? 'border-primary-500 bg-primary-50 text-primary-700'
+                  : 'border-slate-200 text-slate-500 hover:border-slate-300'
+              }`}
             >
-              <ImageIcon size={22} className="text-slate-300" />
-              <span className="text-sm text-slate-500">Click to upload screenshot</span>
-              <span className="text-xs text-slate-400">JPEG, PNG or WEBP, up to 5MB</span>
-            </label>
+              {m.value === 'Card' ? <CreditCard size={16} /> : <Landmark size={16} />}
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ADD THIS — Card flow */}
+      {method === 'Card' ? (
+        <div className="card">
+          {!stripePromise || !clientSecret ? (
+            <p className="text-sm text-slate-400 text-center py-6">Preparing secure payment form...</p>
+          ) : (
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <StripeCardForm
+                clientSecret={clientSecret}
+                onSuccess={handleCardPaymentSuccess}
+                isCreatingIntent={confirmStripe.isPending}
+              />
+            </Elements>
           )}
         </div>
+      ) : (
+        /* Manual flow — unchanged, শুধু method selector উপরে move হয়েছে */
+        <form onSubmit={handleSubmit} className="card space-y-4">
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs text-slate-500 leading-relaxed">
+            Send <strong className="text-slate-700">{booking.currencyCode} {booking.totalAmount.toFixed(2)}</strong> to
+            our {PAYMENT_METHODS.find((m) => m.value === method)?.label} account, then enter the transaction ID and
+            upload a screenshot of the payment confirmation below.
+          </div>
 
-        <p className="flex items-center gap-1.5 text-xs text-slate-400">
-          <ShieldCheck size={13} /> Your payment will be verified by our team within 24 hours
-        </p>
+          <Input
+            label="Transaction ID"
+            placeholder="e.g. 8N7A2K9X1M"
+            value={transactionId}
+            onChange={(e) => setTransactionId(e.target.value)}
+            required
+          />
 
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full"
-          icon={Upload}
-          isLoading={submitPayment.isPending}
-          disabled={!transactionId || !screenshot}
-        >
-          Submit Payment Proof
-        </Button>
-      </form>
+          <div>
+            <label className="label-text mb-2 block">Payment Screenshot</label>
+
+            {!preview ? (
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="payment-screenshot-input"
+              />
+            ) : null}
+
+            {preview ? (
+              <div className="relative rounded-xl overflow-hidden border border-slate-200">
+                <img src={preview} alt="Payment proof" className="w-full max-h-64 object-contain bg-slate-50" />
+                <button
+                  type="button"
+                  onClick={removeScreenshot}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label
+                htmlFor="payment-screenshot-input"
+                className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-xl py-8 cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-colors"
+              >
+                <ImageIcon size={22} className="text-slate-300" />
+                <span className="text-sm text-slate-500">Click to upload screenshot</span>
+                <span className="text-xs text-slate-400">JPEG, PNG or WEBP, up to 5MB</span>
+              </label>
+            )}
+          </div>
+
+          <p className="flex items-center gap-1.5 text-xs text-slate-400">
+            <ShieldCheck size={13} /> Your payment will be verified by our team within 24 hours
+          </p>
+
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            icon={Upload}
+            isLoading={submitPayment.isPending}
+            disabled={!transactionId || !screenshot}
+          >
+            Submit Payment Proof
+          </Button>
+        </form>
+      )}
 
       <button
         onClick={() => navigate('/booking/review')}

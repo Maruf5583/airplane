@@ -26,3 +26,12 @@ export function useVerifyPayment() {
     onError: (error) => toast.error(error.response?.data?.detail || 'Failed to process payment'),
   });
 }
+
+
+import { createPaymentIntent, confirmStripePayment } from '../api/settings'; // অথবা আপনার payments api file, যেখানে থাকা উচিত
+
+export const useCreatePaymentIntent = () =>
+  useMutation({ mutationFn: (bookingId) => createPaymentIntent(bookingId) });
+
+export const useConfirmStripePayment = () =>
+  useMutation({ mutationFn: (paymentIntentId) => confirmStripePayment(paymentIntentId) });

@@ -41,3 +41,13 @@ export const useUploadFavicon = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['settings'] }),
   });
 };
+
+import { updateStripeSettings } from '../api/settings';   // top import-এ যোগ করুন
+
+export const useUpdateStripeSettings = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: updateStripeSettings,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['settings'] }),
+  });
+};
